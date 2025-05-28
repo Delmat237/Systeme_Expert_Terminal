@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import AjouterConteneurForm from '@/components/AjouterConteneurForm';
 import SupprimerConteneurForm from '@/components/SupprimerConteneurForm';
 import API_URL from '@/constants/url';
+import PlanificationNavires from '@/app/planification/page';
 
 export default function Home() {
   const [conteneurs, setConteneurs] = useState('c001');
@@ -71,6 +72,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">Système Expert - Terminal à Conteneurs</h1>
 
+          <PlanificationNavires/>
             <section id="objectif" className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow">
               <h2 className="text-2xl font-semibold mb-4 text-blue-700">🎯 Objectif du système</h2>
               <p className="text-gray-700 mb-4">
