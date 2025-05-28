@@ -1,5 +1,5 @@
 # Dockerfile
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Désactive les prompts interactifs
 ARG DEBIAN_FRONTEND=noninteractive
@@ -12,6 +12,6 @@ COPY . .
 
 RUN npm install
 
-EXPOSE 3001
+EXPOSE 5000
 
 CMD ["node", "server.js"]
