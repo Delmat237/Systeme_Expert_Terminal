@@ -15,6 +15,9 @@ navire(n001, arrivee, porte_conteneurs, 300, oui, 3000, 12.5).
 navire(n002, pret, porte_conteneurs, 400, non, 1500, 14).
 navire(n003, arrivee, militaire, 150, oui, 1000, 10).
 navire(n004, arrivee, frigo, 200, oui, 1200, 11).
+navire(n005, arrivee, porte_conteneurs, 350, non, 1500, 12).
+navire(n005, arrivee, porte_conteneurs, 350, non, 1500, 12).
+navire(n005, arrivee, porte_conteneurs, 350, non, 1500, 12).
 
 % --- QUAIS ---
 % quai(ID, longueur_max, tirant_max, disponible).
@@ -30,6 +33,7 @@ meteo(14, calme).
 heure_occupation(15, n001).
 
 % --- CONTENEURS ---
+conteneur(c999, export, dangereux, reefers, zone_c).
 % conteneur(ID, flux, danger, type, zone).
 conteneur(c001, import, dangereux, reefers, zone_a).
 conteneur(c002, export, normal, standard, zone_b).

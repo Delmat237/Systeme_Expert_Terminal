@@ -8,6 +8,7 @@ test(isolation_conteneur_dangereux) :-
 
 test(isolation_conteneur_non_dangereux, [fail]) :-
     doit_etre_isole(c002).
+    writln(c002).
 
 test(quai_approprie_ok) :-
     quai_approprie(n001, q1).
