@@ -1,102 +1,134 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const fs = require('fs');
+const prologPath = path.resolve(__dirname, 'base_connaissances.pl');
 
 app.use(cors());
 app.use(bodyParser.json());
 
+/* ============================
+   UTILITAIRES GÉNÉRAUX
+============================ */
+const runProlog = (goal) => {
+  const cmd = `swipl -s "${prologPath}" -g "(${goal})" -t halt`;
+  return new Promise((resolve, reject) => {
+    exec(cmd, (err, stdout, stderr) => {
+      if (err) reject(stderr || 'Erreur Prolog');
+      else resolve(stdout.trim());
+    });
+  });
+};
+
+/* ============================
+   INFERENCES (Conteneurs)
+============================ */
 app.post('/api/infer', async (req, res) => {
   const { question, conteneurs } = req.body;
   const results = [];
-  const prologPath = path.resolve(__dirname, 'base_connaissances.pl');
+
+  const rules = {
+    isole: c => `doit_etre_isole(${c}) -> writeln(true); writeln(false)`,
+    zone_reefer: c => `zone_adapte_reefer(${c}, Z) -> format('Zone: ~w~n', [Z]); writeln('false')`,
+    pret_chargement: c => `pret_a_charger(${c}) -> writeln(true); writeln(false)`,
+    anomalie: c => `anomalie_zone(${c}) -> writeln(true); writeln(false)`,
+    zone_surchargee: c => `zone_surchargee(${c}) -> writeln(true); writeln(false)`,
+    pret_embarquer: c => `pret_a_embarquer(${c}) -> writeln(true); writeln(false)`,
+    attente_prolongee: c => `attente_prolongee(${c}) -> writeln(true); writeln(false)`,
+    conflit_dangereux: c => `conflit_dangereux(${c}, Autre) -> format('Conflit avec: ~w~n', [Autre]); writeln('false')`
+  };
+
+  if (!rules[question]) {
+    return res.status(400).json({ error: 'Requête inconnue' });
+  }
 
   for (const conteneur of conteneurs) {
-    let cmd = '';
-
-    switch (question) {
-      case 'isole':
-        cmd = `swipl -s "${prologPath}" -g "(doit_etre_isole(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'zone_reefer':
-        cmd = `swipl -s "${prologPath}" -g "(zone_adapte_reefer(${conteneur}, Z) -> format('Zone: ~w~n', [Z]); writeln('false'))" -t halt`;
-        break;
-      case 'pret_chargement':
-        cmd = `swipl -s "${prologPath}" -g "(pret_a_charger(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'anomalie':
-        cmd = `swipl -s "${prologPath}" -g "(anomalie_zone(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'zone_surchargee':
-        cmd = `swipl -s "${prologPath}" -g "(zone_surchargee(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'pret_embarquer':
-        cmd = `swipl -s "${prologPath}" -g "(pret_a_embarquer(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'attente_prolongee':
-        cmd = `swipl -s "${prologPath}" -g "(attente_prolongee(${conteneur}) -> writeln(true); writeln(false))" -t halt`;
-        break;
-      case 'conflit_dangereux':
-        cmd = `swipl -s "${prologPath}" -g "(conflit_dangereux(${conteneur}, Autre) -> format('Conflit avec: ~w~n', [Autre]); writeln('false'))" -t halt`;
-        break;
-      default:
-        return res.status(400).json({ error: 'Requête inconnue' });
-    }
-
     try {
-      const output = await new Promise((resolve, reject) => {
-        exec(cmd, (err, stdout, stderr) => {
-          if (err) reject(stderr || 'Erreur d’exécution');
-          else resolve(stdout.trim());
-        });
-      });
+      const output = await runProlog(rules[question](conteneur));
       results.push({ conteneur, result: output });
-    } catch (error) {
-      results.push({ conteneur, error: error.toString() });
+    } catch (err) {
+      results.push({ conteneur, error: String(err) });
     }
   }
 
   res.json({ results });
 });
 
+/* ============================
+   PLANIFICATION NAVIRES
+============================ */
 
-// Ajout d’un conteneur Prolog avec placement intelligent dans la section dédiée
+// 1. Planification simple
+app.post('/api/planification', async (req, res) => {
+  const { navireId } = req.body;
+  const goal = `planifier_accostage(${navireId}, Quai) -> format('Accostage prévu au quai: ~w~n', [Quai]); writeln('Aucun quai disponible')`;
+
+  try {
+    const result = await runProlog(goal);
+    res.json({ result });
+  } catch (error) {
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+// 2. Vérification accostage selon météo et créneau horaire
+app.post('/api/accostage', async (req, res) => {
+  const { navireId, heure } = req.body;
+  const goal = `accostage_possible(${navireId}, ${heure}) -> writeln('Oui'); writeln('Non')`;
+
+  try {
+    const result = await runProlog(goal);
+    res.json({ result });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// 3. Assignation prioritaire de quai
+app.post('/api/assignation', async (req, res) => {
+  const { navireId, heure } = req.body;
+  const goal = `assigner_quai_si_possible(${navireId}, ${heure}, Quai) -> format('Assigné au quai: ~w~n', [Quai]); writeln('Aucun quai compatible')`;
+
+  try {
+    const result = await runProlog(goal);
+    res.json({ result });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+/* ============================
+   GESTION CONTENEURS
+============================ */
+
+// Ajouter conteneur
 app.post('/api/ajouter', async (req, res) => {
   const { id, type, nature, contenu, zone } = req.body;
   const newFact = `conteneur(${id}, ${type}, ${nature}, ${contenu}, ${zone}).`;
 
-  const filePath = path.resolve(__dirname, 'base_connaissances.pl');
   try {
-    const originalContent = await fs.promises.readFile(filePath, 'utf-8');
-    const lines = originalContent.split('\n');
+    const content = await fs.promises.readFile(prologPath, 'utf-8');
+    const lines = content.split('\n');
 
     const headerIndex = lines.findIndex(line =>
       line.trim().startsWith('% === Faits des conteneurs ===')
     );
-
     if (headerIndex === -1) {
-      return res.status(500).json({
-        error: "Balise '% === Faits des conteneurs ===' introuvable dans base_connaissances.pl"
-      });
+      return res.status(500).json({ error: "Balise '% === Faits des conteneurs ===' introuvable" });
     }
 
-    // Trouver où s’arrêtent les faits conteneur(...)
     let insertIndex = headerIndex + 1;
-    while (insertIndex < lines.length && lines[insertIndex].startsWith('conteneur(')) {
+    while (lines[insertIndex]?.startsWith('conteneur(')) {
       insertIndex++;
     }
 
-    // Insertion du fait
     lines.splice(insertIndex, 0, newFact);
-    const updatedContent = lines.join('\n');
-
-    await fs.promises.writeFile(filePath, updatedContent);
+    await fs.promises.writeFile(prologPath, lines.join('\n'));
 
     res.json({ message: `✅ Conteneur ${id} ajouté avec succès.` });
   } catch (err) {
@@ -104,62 +136,39 @@ app.post('/api/ajouter', async (req, res) => {
   }
 });
 
-// Suppression d’un conteneur spécifique de la base Prolog
+// Supprimer conteneur
 app.delete('/api/supprimer', async (req, res) => {
   const { id } = req.body;
-
-  if (!id || typeof id !== 'string') {
-    return res.status(400).json({ error: '❌ ID de conteneur invalide.' });
-  }
-
-  const filePath = path.resolve(__dirname, 'base_connaissances.pl');
+  if (!id) return res.status(400).json({ error: 'ID requis' });
 
   try {
-    const originalContent = await fs.promises.readFile(filePath, 'utf-8');
-    const lines = originalContent.split('\n');
+    const content = await fs.promises.readFile(prologPath, 'utf-8');
+    const updated = content
+      .split('\n')
+      .filter(line => !line.trim().startsWith(`conteneur(${id},`))
+      .join('\n');
 
-    const initialLength = lines.length;
-
-    // Supprimer la ligne qui contient conteneur(cXXX, ...)
-    const updatedLines = lines.filter(
-      line => !line.trim().startsWith(`conteneur(${id},`)
-    );
-
-    const deleted = initialLength !== updatedLines.length;
-
-    if (!deleted) {
-      return res.status(404).json({ error: `🔍 Aucun conteneur trouvé avec l’ID : ${id}` });
-    }
-
-    await fs.promises.writeFile(filePath, updatedLines.join('\n'));
-
-    res.json({ message: `🗑️ Conteneur ${id} supprimé avec succès.` });
+    await fs.promises.writeFile(prologPath, updated);
+    res.json({ message: `🗑️ Conteneur ${id} supprimé.` });
   } catch (error) {
-    console.error('Erreur suppression :', error);
-    res.status(500).json({ error: '💥 Erreur lors de la suppression.' });
+    res.status(500).json({ error: 'Erreur suppression.' });
   }
 });
 
-// Lister tous les identifiants de conteneurs déclarés dans base_connaissances.pl
-app.get('/api/lister', async (req, res) => {
-  const filePath = path.resolve(__dirname, 'base_connaissances.pl');
-
+// Lister tous les IDs de conteneurs
+app.get('/api/lister', async (_req, res) => {
   try {
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-
-    // Extraire les ID depuis conteneur(ID, ...
+    const content = await fs.promises.readFile(prologPath, 'utf-8');
     const regex = /conteneur\(([^,\s]+)/g;
     const ids = [...content.matchAll(regex)].map(match => match[1]);
-
-    const uniqueIds = [...new Set(ids)];
-
-    res.json(uniqueIds);
-  } catch (error) {
-    console.error('Erreur lecture fichier :', error);
+    res.json([...new Set(ids)]);
+  } catch (err) {
     res.status(500).json([]);
   }
 });
 
+/* ============================
+   SERVER START
+============================ */
+app.listen(PORT, () => console.log(`✅ API en ligne sur http://localhost:${PORT}`));
 
-
-app.listen(PORT, () => console.log(`API en ligne sur http://localhost:${PORT}`));
