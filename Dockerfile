@@ -1,17 +1,17 @@
-# Dockerfile
-FROM ubuntu:22.04
+FROM node:18
 
-# Désactive les prompts interactifs
-ARG DEBIAN_FRONTEND=noninteractive
+# Installer SWI-Prolog
+RUN apt-get update && apt-get install -y swi-prolog
 
-# Installer Prolog et Node
-RUN apt update && apt install -y swi-prolog curl gnupg nodejs npm
-
+# Créer le répertoire de travail
 WORKDIR /app
+
+# Copier les fichiers
 COPY . .
 
+# Installer les dépendances
 RUN npm install
 
-EXPOSE 5000
-
+# Lancer l'application
 CMD ["node", "server.js"]
+
