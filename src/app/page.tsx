@@ -1,194 +1,288 @@
 'use client';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState } from 'react';
+
 import Layout from '@/components/Layout';
-import AjouterConteneurForm from '@/components/AjouterConteneurForm';
-import SupprimerConteneurForm from '@/components/SupprimerConteneurForm';
-import API_URL from '@/constants/url';
-import PlanificationNavires from '@/app/planification/page';
+import ModuleSelector from '@/components/ModuleSelector';
 
 export default function Home() {
-  const [conteneurs, setConteneurs] = useState('c001');
-  const [question, setQuestion] = useState('isole');
-  const [result, setResult] = useState<{ conteneur: string; result?: string; error?: string }[] | null>(null);
-  const [showMenu, setShowMenu] = useState(false);
+  const [code, setCode] = useState('');
+  const [results, setResults] = useState('');
+  const [activeModule, setActiveModule] = useState('base');
 
-  useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = '';
-    };
-  }, []);
 
-  const handleSubmit = async () => {
-    const body = {
-      question,
-      conteneurs: conteneurs.split(',').map(c => c.trim())
-    };
-    const res = await fetch(API_URL+'/infer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    setResult(data.results);
+const modules = [
+  { 
+    id: '⚓',
+    name: 'Module 1 - Planification et Accostage des navires', 
+    description: 'Optimisation des opérations d\'accostage en fonction des caractéristiques des navires, des conditions météorologiques et des disponibilités des quais.',
+    module_features: [
+      "Attribution dynamique des quais",
+      "Analyse du tirant d'eau",
+      "Gestion des créneaux horaires",
+      "Suivi météorologique en temps réel",
+      "Priorisation des navires"
+    ]
+  },
+  { 
+    id: '🏗️',
+    name: 'Module 2 - Déchargement STS (Ship-to-Shore)', 
+    description: "Optimisation des opérations de déchargement avec maximisation de l'utilisation des portiques et réduction des temps d'immobilisation des navires.",
+    module_features: [
+      "Gestion intelligente des portiques",
+      "Système de capteurs IoT",
+      "Intégration avec le TOS",
+      "Reconnaissance automatique des conteneurs",
+      "Synchronisation avec le transport terrestre"
+    ]
+  },
+  { 
+    id: '📦',
+    name: 'Module 3 - Opérations de cour (Yard Management)', 
+    description: "Optimisation du stockage et du mouvement des conteneurs dans la zone de cour avec minimisation des déplacements inutiles.",
+    module_features: [
+      "Gestion des grues RTG",
+      "Allocation dynamique des zones",
+      "Stratégies d'empilage intelligentes",
+      "Optimisation des trajectoires",
+      "Gestion des conteneurs spéciaux"
+    ]
+  },
+  { 
+    id: '🛂',
+    name: 'Module 4 - Processus douanier', 
+    description: 'Automatisation des procédures administratives et gestion des contrôles douaniers.',
+    module_features: [
+      "Interface CAMCIS",
+      "Vérification automatisée des documents",
+      "Gestion des inspections",
+      "Suivi des conteneurs à risque",
+      "Archivage numérique"
+    ]
+  },
+  { 
+    id: '🚛',
+    name: 'Module 5 - Chargement pour export', 
+    description: "Planification optimale du chargement des navires en fonction de leur stabilité et des destinations.",
+    module_features: [
+      "Génération automatique des plans de chargement",
+      "Calcul de stabilité en temps réel",
+      "Gestion des scellés",
+      "Coordination avec les opérations de cour",
+      "Optimisation de l'équilibrage"
+    ]
+  },
+  { 
+    id: '🚪',
+    name: 'Module 6 - Sortie portuaire', 
+    description: "Gestion optimisée du flux des conteneurs vers les transports terrestres et contrôle des sorties.",
+    module_features: [
+      "Planification des transports",
+      "Gestion des portes d'accès",
+      "Contrôles automatisés",
+      "Coordination avec les douanes",
+      "Suivi en temps réel"
+    ]
+  }
+];
+
+  const handleExecute = async () => {
+    try {
+   
+      // const response = await fetch('/api/prolog', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ code, module: activeModule })
+      // });
+      const response = await fetch('https://rsm-z3xm.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          "email": "azangueleonel9@gmail.com",
+          "motDePasse": "azaleodel"
+        })
+      });
+      const data = await response.json();
+      console.log('Prolog response:', data);
+      setResults(data.result || data.error);
+    } catch (error) {
+      setResults('Error executing query');
+    }
   };
 
   return (
     <Layout>
-      <div className="flex flex-col lg:flex-row w-full">
-        {/* Sidebar navigation responsive */}
-        <aside className="w-full lg:w-1/4 p-4 bg-white shadow-md rounded-xl mb-6 lg:mb-0 lg:mr-6 sticky top-4 h-fit z-10">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="lg:hidden mb-4 bg-blue-600 text-white py-2 px-4 rounded flex items-center justify-center gap-2"
-          >
-            <span>{showMenu ? 'Fermer' : 'Menu'}</span>
-            <svg
-              className={`w-5 h-5 transform transition-transform duration-300 ${showMenu ? 'rotate-90' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
+                {/* <!-- Section Hero --> */}
+    <section className="hero">
+        <div className="hero-content">
+            <h1>🚢 Système Expert pour la Gestion Logistique</h1>
+            <h2>Terminal à Conteneurs - Port Autonome de Kribi</h2>
+            <p className="subtitle">
+                Intelligence Artificielle avancée pour l'optimisation complète des opérations portuaires
+            </p>
+            <p className="description">
+                Système expert modulaire basé sur Prolog intégrant tous les processus logistiques : 
+                accostage, déchargement, stockage, douane, chargement et sortie.
+            </p>
+            <div className="hero-buttons">
+                <a href="/" className="cta-button primary">
+                    🚀 Lancer le Système Expert
+                </a>
+                <a href="#modules" className="cta-button secondary">
+                    📋 Explorer les Modules
+                </a>
+            </div>
+        </div>
+    </section>
 
-          <nav className={`space-y-4 text-left lg:text-left transition-all duration-300 ${showMenu ? 'block' : 'hidden'} lg:block`}>
-            <a href="#objectif" className="block text-blue-700 hover:underline">🎯 Objectif</a>
-            <a href="#modules" className="block text-blue-700 hover:underline">📦 Modules</a>
-            <a href="#requetes" className="block text-blue-700 hover:underline">📨 Requêtes</a>
-            <a href="#ajout" className="block text-blue-700 hover:underline">➕ Ajouter un conteneur</a>
-            <a href="#supprimer" className="block text-blue-700 hover:underline">🗑️ Supprimer un conteneur</a>
-            <a href="#test" className="block text-blue-700 hover:underline">🧪 Tester une requête</a>
-            <a href="/documentation" className="block text-blue-700 hover:underline">📘 Documentation</a>
-          </nav>
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 p-4 md:p-6 w-full">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">Système Expert - Terminal à Conteneurs</h1>
-
-          <PlanificationNavires/>
-            <section id="objectif" className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-700">🎯 Objectif du système</h2>
-              <p className="text-gray-700 mb-4">
-                Ce système expert assiste les opérateurs logistiques d’un terminal à conteneurs en leur fournissant
-                une aide à la décision basée sur la logique formelle. Il évalue automatiquement chaque conteneur
-                selon son type, sa dangerosité, sa destination et sa zone d’affectation.
-              </p>
-            </section>
-
-            <section id="modules" className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-700">📦 Modules du système</h2>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>Base de connaissances</strong> – Faits et règles métier en Prolog.</li>
-                <li><strong>Moteur d'inférences</strong> – Raisonnement basé sur la logique formelle.</li>
-                <li><strong>Interface utilisateur</strong> – Application web avec formulaire interactif.</li>
-              </ul>
-            </section>
-
-            <section id="requetes" className="mb-8 p-4 sm:p-6 bg-white rounded-xl shadow">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-700">📨 Requêtes supportées</h2>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><code>isole</code> – Vérifie si un conteneur est dangereux.</li>
-                <li><code>zone_reefer</code> – Vérifie si une zone réfrigérée est disponible.</li>
-                <li><code>pret_chargement</code> – Vérifie si un conteneur peut être chargé.</li>
-                <li><code>anomalie</code> – Détecte les placements anormaux de conteneurs.</li>
-                <li><Link href="/documentation" className="hover:underline text-blue-900">Voir plus</Link></li>
-              </ul>
-            </section>
-
-            <section id="ajout" className="mb-8">
-              <AjouterConteneurForm />
-            </section>
-
-            <section id="supprimer" className="mb-8">
-              <SupprimerConteneurForm />
-            </section>
-
-            <section id="test" className="p-4 sm:p-6 bg-white rounded-xl shadow">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-700">🧪 Tester une requête</h2>
-              <input
-                type="text"
-                value={conteneurs}
-                onChange={(e) => setConteneurs(e.target.value)}
-                className="border p-2 w-full rounded mb-4"
-                placeholder="IDs des conteneurs (ex: c001,c002)"
+     {/* <!-- Section Modules --> */}
+        <section className="modules-section" id="modules">
+            <div className="lg:col-span-1 space-y-4">
+              <ModuleSelector 
+                modules={modules} 
+                activeModule={activeModule}
+                onChange={setActiveModule}
               />
-              {question === 'conflit_dangereux' && (
-                    <input
-                      type="text"
-                      placeholder="ID du second conteneur (ex: c002)"
-                      className="border p-2 w-full rounded mb-4"
-                      onChange={(e) => {
-                        const base = conteneurs.split(',')[0];
-                        setConteneurs(`${base},${e.target.value}`);
-                      }}
-                    />
-                  )}
+              </div>
+          </section>
 
-              <label htmlFor="question-select" className="sr-only">
-                Choisissez une question
-              </label>
-              <select
-                id="question-select"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="border p-2 w-full rounded mb-4"
-                aria-label="Choisissez une question"
-              >
-                <option value="isole">Conteneur dangereux ?</option>
-                <option value="zone_reefer">Zone pour reefers</option>
-                <option value="pret_chargement">Prêt à charger ?</option>
-                <option value="anomalie">Placement anormal ?</option>
-                <option value="zone_surchargee">Zones surchargées ?</option>
-                <option value="pret_embarquer">Conteneur prêt à embarquer ?</option>
-                <option value="attente_prolongee">Attente prolongée ?</option>
-
-                <option value="conflit_dangereux">Conflit dangereux entre 2 conteneurs ?</option>
-
-
-              </select>
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full"
-              >
-                Soumettre
-              </button>
-              {result && (
-                <div className="mt-6 space-y-4">
-                  {result.map((r, i) => (
-                    <div
-                      key={i}
-                      className={`p-4 rounded shadow border ${
-                        r.error
-                          ? 'bg-red-100 border-red-300'
-                          : r.result === 'true' || r.result?.startsWith('Zone:')
-                          ? 'bg-green-100 border-green-300'
-                          : 'bg-yellow-100 border-yellow-300'
-                      }`}
-                    >
-                      <strong>Conteneur :</strong> {r.conteneur}<br />
-                      <strong>Résultat :</strong>{' '}
-                      {r.result?.startsWith('Zone:') ? (
-                        <>🧊 Zone adaptée : <strong>{r.result.split(': ')[1]}</strong></>
-                      ) : (
-                        r.result || r.error
-                      )}
+  {/* <!-- Section Processus --> */}
+    <section className="process-section" id="process">
+        <div className="container">
+            <h2>⚙️ Flux Logistique Intégré</h2>
+            <p className="section-subtitle">Processus complet de la gestion d'un terminal à conteneurs</p>
+            
+            <div className="process-flow">
+                <div className="process-step" data-step="1">
+                    <div className="step-number">1</div>
+                    <div className="step-content">
+                        <h3>Arrivée & Accostage</h3>
+                        <p>Attribution automatique des quais selon les contraintes physiques et météorologiques</p>
                     </div>
-                  ))}
                 </div>
-              )}
-            </section>
-          </div>
-        </main>
-      </div>
+                
+                <div className="process-arrow">→</div>
+                
+                <div className="process-step" data-step="2">
+                    <div className="step-number">2</div>
+                    <div className="step-content">
+                        <h3>Déchargement</h3>
+                        <p>Utilisation optimale des portiques STS avec inspection et enregistrement TOS</p>
+                    </div>
+                </div>
+                
+                <div className="process-arrow">→</div>
+                
+                <div className="process-step" data-step="3">
+                    <div className="step-number">3</div>
+                    <div className="step-content">
+                        <h3>Stockage</h3>
+                        <p>Empilage intelligent selon le type et la destination des conteneurs</p>
+                    </div>
+                </div>
+                
+                <div className="process-arrow">→</div>
+                
+                <div className="process-step" data-step="4">
+                    <div className="step-number">4</div>
+                    <div className="step-content">
+                        <h3>Contrôles Douaniers</h3>
+                        <p>Vérification documents, inspections et clearance administrative</p>
+                    </div>
+                </div>
+                
+                <div className="process-arrow">→</div>
+                
+                <div className="process-step" data-step="5">
+                    <div className="step-number">5</div>
+                    <div className="step-content">
+                        <h3>Chargement Export</h3>
+                        <p>Préparation et chargement avec optimisation de la stabilité</p>
+                    </div>
+                </div>
+                
+                <div className="process-arrow">→</div>
+                
+                <div className="process-step" data-step="6">
+                    <div className="step-number">6</div>
+                    <div className="step-content">
+                        <h3>Sortie Port</h3>
+                        <p>Transport terrestre et gestion des flux aux portes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* <!-- Section Technologie --> */}
+    <section className="tech-section" id="technology">
+        <div className="container">
+            <h2>🛠️ Architecture Technique</h2>
+            <div className="tech-grid">
+                <div className="tech-card">
+                    <div className="tech-icon">🧠</div>
+                    <h3>Moteur Prolog</h3>
+                    <p>Base de connaissances avec faits et règles d'inférence pour chaque module</p>
+                </div>
+                <div className="tech-card">
+                    <div className="tech-icon">⚡</div>
+                    <h3>JavaScript ES6+</h3>
+                    <p>Interface moderne et interactions temps réel avec le moteur d'inférence</p>
+                </div>
+                <div className="tech-card">
+                    <div className="tech-icon">🎨</div>
+                    <h3>CSS3 Avancé</h3>
+                    <p>Design glassmorphism avec animations fluides et interface responsive</p>
+                </div>
+                <div className="tech-card">
+                    <div className="tech-icon">📊</div>
+                    <h3>TOS Simulation</h3>
+                    <p>Simulation du Terminal Operating System avec gestion des états</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* <!-- Section Statistiques --> */}
+    <section className="stats-section" id="stat">
+        <div className="container">
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-number">6</div>
+                    <div className="stat-label">Modules Intégrés</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-number">50+</div>
+                    <div className="stat-label">Règles Prolog</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-number">100%</div>
+                    <div className="stat-label">Automatisé</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-number">24/7</div>
+                    <div className="stat-label">Disponibilité</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {/* <!-- Section Call to Action --> */}
+    <section className="cta-section" id="demo">
+        <div className="container">
+            <h2>🎯 Testez le Système Expert</h2>
+            <p>Découvrez la puissance de l'IA appliquée à la logistique portuaire</p>
+            <div className="cta-buttons">
+                <a href="system.html" className="cta-button primary large">
+                    🚀 Lancer la Démonstration
+                </a>
+                <a href="#modules" className="cta-button secondary large">
+                    📖 Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+      
     </Layout>
   );
 }
-
-

@@ -20,7 +20,9 @@ export default function AjouterConteneurForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch(API_URL+'/ajouter', {
+    const res = await fetch(
+    API_URL+'/ajouter', 
+    {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
