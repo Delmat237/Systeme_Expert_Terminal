@@ -14,7 +14,7 @@ interface ModuleSelectorProps {
 export default function ModuleSelector({ modules, activeModule, onChange }: ModuleSelectorProps) {
   return (
 
-      <div className="container mx-auto px-4 py-8">
+      <div className=" container mx-auto px-4 py-8">
       <h2 className="text-lg font-semibold mb-4">📋 Modules du Système Expert</h2>
         <p className="section-subtitle">Six modules interconnectés pour une gestion logistique complète</p>
 

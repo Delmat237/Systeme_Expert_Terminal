@@ -391,6 +391,7 @@ body {
 .cta-section {
     padding: 100px 0;
     position: relative;
+   
 }
 
 .modules-section {
@@ -604,6 +605,22 @@ section h2::after {
     margin-top: 60px;
 }
 
+.code-block{
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: var(--shadow-light);
+    position: relative;
+}
+.code-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    background-color:#0b559e;
+}
 .tech-card {
     background: var(--white);
     padding: 40px 30px;
@@ -830,4 +847,219 @@ section h2::after {
 
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+/* Demo Page Specific Styles */
+.config-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12;
+}
+
+.config-section {
+  @apply bg-white rounded-xl shadow-md p-6;
+}
+
+.config-section h3 {
+  @apply text-xl font-semibold mb-4 flex items-center gap-2;
+}
+
+.modules-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-3;
+}
+
+.module-toggle {
+  @apply bg-gray-50 border border-gray-200 rounded-lg p-4 cursor-pointer transition-all;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.module-toggle.active {
+  @apply bg-blue-50 border-blue-300;
+}
+
+.module-icon {
+  @apply text-2xl;
+}
+
+.module-info h4 {
+  @apply font-medium;
+}
+
+.module-info p {
+  @apply text-sm text-gray-600;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+.form-group label {
+  @apply block mb-2 font-medium text-gray-700;
+}
+
+.form-group input, 
+.form-group select {
+  @apply w-full p-3 border border-gray-300 rounded-lg;
+}
+
+.form-row {
+  @apply grid grid-cols-2 gap-4;
+}
+
+.control-buttons {
+  @apply flex flex-wrap gap-4 justify-center mt-8;
+}
+
+/* Results Section */
+.results-section {
+  @apply bg-gray-50 py-16;
+}
+
+.progress-container {
+  @apply mb-12 max-w-3xl mx-auto;
+}
+
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-4 mb-2 overflow-hidden;
+}
+
+.progress-fill {
+  @apply bg-blue-600 h-4 rounded-full;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  @apply text-center text-gray-600 font-medium;
+}
+
+.modules-results {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12;
+}
+
+.module-result {
+  @apply bg-white rounded-xl shadow-md overflow-hidden;
+}
+
+.module-result .module-header {
+  @apply flex items-center gap-3 p-4;
+}
+
+.module-result .module-icon {
+  @apply text-2xl;
+}
+
+.module-result .module-status {
+  @apply px-4 pb-4;
+}
+
+.module-result .success {
+  @apply text-green-600;
+}
+
+.module-result .processing {
+  @apply text-blue-600;
+}
+
+.module-result .error {
+  @apply text-red-600;
+}
+
+.module-result.blue {
+  border-top: 4px solid #3b82f6;
+}
+
+.module-result.teal {
+  border-top: 4px solid #14b8a6;
+}
+
+.module-result.orange {
+  border-top: 4px solid #f97316;
+}
+
+.module-result.purple {
+  border-top: 4px solid #8b5cf6;
+}
+
+.module-result.green {
+  border-top: 4px solid #22c55e;
+}
+
+.module-result.red {
+  border-top: 4px solid #ef4444;
+}
+
+.results-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-6 mb-12;
+}
+
+.result-card {
+  @apply bg-white rounded-xl shadow-md p-6 text-center;
+}
+
+.result-card .stat-number {
+  @apply text-3xl font-bold text-blue-600 mb-2;
+}
+
+.result-card .stat-label {
+  @apply text-gray-600;
+}
+
+.export-options {
+  @apply text-center;
+}
+
+.export-buttons {
+  @apply flex flex-wrap justify-center gap-4 mt-4;
+}
+
+/* Log Section */
+.log-section {
+  @apply py-16;
+}
+
+.log-console {
+  @apply bg-gray-800 text-gray-100 rounded-xl overflow-hidden;
+}
+
+.log-header {
+  @apply flex justify-between items-center p-4 bg-gray-900;
+}
+
+.log-header h3 {
+  @apply font-bold;
+}
+
+.log-controls button {
+  @apply bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm ml-2;
+}
+
+.log-content {
+  @apply p-4 overflow-y-auto max-h-96;
+}
+
+.log-content.hidden {
+  @apply h-0 p-0 overflow-hidden;
+}
+
+.log-entry {
+  @apply mb-2 p-3 rounded;
+}
+
+.log-entry .timestamp {
+  @apply text-gray-400 text-xs mr-3;
+}
+
+.log-entry.info {
+  @apply bg-blue-900/30;
+}
+
+.log-entry.process {
+  @apply bg-yellow-900/30;
+}
+
+.log-entry.success {
+  @apply bg-green-900/30;
+}
+
+.log-entry.error {
+  @apply bg-red-900/30;
 }
